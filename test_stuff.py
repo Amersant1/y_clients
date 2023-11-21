@@ -1,33 +1,38 @@
 from controller import *
 from model import *
-jenuary = set()
-february = set()
-same = ()
 from sqlalchemy import extract  
 session = sessionmaker(engine)()
 
 def getDataMonth(staff_id, month_number):
-    month = set()
-    
+    clients = set()
     filter = list()
     filter.append(Appointment.staff_id == staff_id)
-    filter.append(extract('month', Appointment.datetime_of_appointment) == month_number)
+    filter.append(extract('month', Appointment.datetime_of_appointment) == month_number + 1)
 
     appoints = session.query(Appointment).filter(*filter).all()
     for appoint in appoints:
-        month.add(appoint.client_id)
+        clients.add(appoint.client_id)
 
-    return month
+    return clients
 
 #staff
 staffs = session.query(Staff).all()
+each_staff = []
 for person in staffs:
-    jenuary = getDataMonth(person.id, 1)
-    february = getDataMonth(person.id, 2)
-    same = jenuary & february
 
+    appointmentsChange = dict()
+    months = []
+    for i in range(12):
+        months.append(getDataMonth(person.id, i))
 
-    print(len(same))
+    for i in range(12):
+        monthData = []
+        for j in range(i):
+            monthData.append(len(months[i] & months[j]))
+        appointmentsChange[i+1] = monthData
+
+    each_staff.append(appointmentsChange)
+
 
 
 

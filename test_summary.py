@@ -25,8 +25,7 @@ appointmentsChange = dict()
 for i in range(12):
     monthData = []
     for j in range(i):
-        lenght = len(months[i] & months[j])
-        monthData.append(lenght)
+        monthData.append(len(months[i] & months[j]))
     appointmentsChange[i+1] = monthData
 print(appointmentsChange)
 
