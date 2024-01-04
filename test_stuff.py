@@ -1,13 +1,17 @@
 from controller import *
 from model import *
-from sqlalchemy import extract  
+from sqlalchemy import extract
+
 session = sessionmaker(engine)()
+
 
 def getDataMonth(staff_id, month_number):
     clients = set()
     filter = list()
     filter.append(Appointment.staff_id == staff_id)
-    filter.append(extract('month', Appointment.datetime_of_appointment) == month_number + 1)
+    filter.append(
+        extract("month", Appointment.datetime_of_appointment) == month_number + 1
+    )
 
     appoints = session.query(Appointment).filter(*filter).all()
     for appoint in appoints:
@@ -15,11 +19,11 @@ def getDataMonth(staff_id, month_number):
 
     return clients
 
-#staff
+
+# staff
 staffs = session.query(Staff).all()
 each_staff = []
 for person in staffs:
-
     appointmentsChange = dict()
     months = []
     for i in range(12):
@@ -29,10 +33,6 @@ for person in staffs:
         monthData = []
         for j in range(i):
             monthData.append(len(months[i] & months[j]))
-        appointmentsChange[i+1] = monthData
+        appointmentsChange[i + 1] = monthData
 
     each_staff.append(appointmentsChange)
-
-
-
-

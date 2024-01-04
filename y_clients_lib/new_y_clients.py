@@ -1,50 +1,65 @@
-import requests 
+import requests
 import json
 import pandas as pd
 import time
+
+
 class YClientsAPI:
-    
-    def __init__(self, partner_token: str,user_token, company_id: int, form_id: int, language: str = 'ru-RU'):
+    def __init__(
+        self,
+        partner_token: str,
+        user_token,
+        company_id: int,
+        form_id: int,
+        language: str = "ru-RU",
+    ):
         self.company_id = company_id
         self.form_id = form_id
         self.headers = {
             "Accept": "application/vnd.yclients.v2+json",
-            'Accept-Language': language,
-            'Authorization': "Bearer {}, User {}".format(partner_token,user_token),
-            'Cache-Control': "no-cache"
+            "Accept-Language": language,
+            "Authorization": "Bearer {}, User {}".format(partner_token, user_token),
+            "Cache-Control": "no-cache",
         }
         # if __show_debugging==True code will show debugging process
         self.__show_debugging = False
 
-
     def get_staff_info(self, staff_id: int) -> dict:
-        """ Return dict with info about specific staff"""
-        url = "https://n{}.yclients.com/api/v1/staff/{}/{}".format(self.form_id, self.company_id, staff_id)
+        """Return dict with info about specific staff"""
+        url = "https://n{}.yclients.com/api/v1/staff/{}/{}".format(
+            self.form_id, self.company_id, staff_id
+        )
         response = requests.get(url, headers=self.headers)
         return json.loads(response.text)
-    
 
     def get_service_info(self, service_id: int) -> dict:
-        """ Return dict with info about specific service"""
-        url = "https://n{}.yclients.com/api/v1/services/{}/{}".format(self.form_id, self.company_id, service_id)
+        """Return dict with info about specific service"""
+        url = "https://n{}.yclients.com/api/v1/services/{}/{}".format(
+            self.form_id, self.company_id, service_id
+        )
         response = requests.get(url, headers=self.headers)
         return json.loads(response.text)
+
     def get_staff(self, service_id: int = None, date_time=None) -> dict:
-        """ Return dict of staff for specific service and date"""
-        url = "https://n{}.yclients.com/api/v1/book_staff/{}".format(self.form_id, self.company_id)
+        """Return dict of staff for specific service and date"""
+        url = "https://n{}.yclients.com/api/v1/book_staff/{}".format(
+            self.form_id, self.company_id
+        )
         querystring = {"service_ids[]": int(service_id)} if service_id else {}
         querystring.update({"datetime": date_time} if date_time else {})
         response = requests.get(url, headers=self.headers, params=querystring)
         return json.loads(response.text)
 
     def get_services(self, staff_id: int = None, date_time: int = None) -> dict:
-        """ Return list of services for specific staff and date"""
-        url = "https://n{}.yclients.com/api/v1/book_services/{}".format(self.form_id, self.company_id)
+        """Return list of services for specific staff and date"""
+        url = "https://n{}.yclients.com/api/v1/book_services/{}".format(
+            self.form_id, self.company_id
+        )
         querystring = {"staff_id": int(staff_id)} if staff_id else {}
         querystring.update({"datetime": date_time} if date_time else {})
         response = requests.get(url, headers=self.headers, params=querystring)
         return json.loads(response.text)
-    
+
     def show_debugging(self):
         print("Debugging prints turned on")
         self.__show_debugging = True
@@ -52,7 +67,6 @@ class YClientsAPI:
     def hide_debugging(self):
         print("Debugging prints turned off")
         self.__show_debugging = False
-
 
     def get_user_token(self, login: str, password: str) -> str:
         """
@@ -62,16 +76,13 @@ class YClientsAPI:
         :return: user token
         """
         url = "https://api.yclients.com/api/v1/auth"
-        querystring = {
-            "login": login,
-            "password": password
-        }
+        querystring = {"login": login, "password": password}
         response = httpx.post(url, headers=self.headers, params=querystring)
-        user_token = json.loads(response.text)['data']['user_token']
+        user_token = json.loads(response.text)["data"]["user_token"]
         if self.__show_debugging:
             print(f"Obtained user token {user_token}")
         return user_token
-    
+
     def update_user_token(self, user_token: str):
         """
         After user token was obtained you need to include it in
@@ -79,11 +90,13 @@ class YClientsAPI:
         :param user_token: user token
         :return:
         """
-        self.headers['Authorization'] = \
-            self.headers['Authorization'] + f", User {user_token}"
+        self.headers["Authorization"] = (
+            self.headers["Authorization"] + f", User {user_token}"
+        )
         if self.__show_debugging:
-            print(f"Updated autorisation parameters:"
-                  f" {self.headers['Authorization']}")
+            print(
+                f"Updated autorisation parameters:" f" {self.headers['Authorization']}"
+            )
 
     def show_user_permissions(self):
         """
@@ -91,15 +104,15 @@ class YClientsAPI:
         """
         url = f"https://api.yclients.com/api/v1/user/permissions/{self.company_id}"
         querystring = {}
-        response = requests.get( url, headers=self.headers, params=querystring)
-        data = json.loads(response.text)['data']
+        response = requests.get(url, headers=self.headers, params=querystring)
+        data = json.loads(response.text)["data"]
         print("User permissions:")
         print(json.dumps(data, indent=4, sort_keys=True))
         return data
 
         """CLIENTS DATA"""
 
-    def __get_clients_page(self, page_number: int,  clients_per_page: int) -> dict:
+    def __get_clients_page(self, page_number: int, clients_per_page: int) -> dict:
         """
         Yclients api can't return all clients at once and returns in groups
          of maximum size of 200. Those groups are called pages and you can
@@ -116,7 +129,7 @@ class YClientsAPI:
         querystring.update({"page": page_number})
         response = requests.get(url, headers=self.headers, params=querystring)
         if self.__show_debugging:
-            print(f'Clients page {page_number} obtained in {time.time() - st} sec')
+            print(f"Clients page {page_number} obtained in {time.time() - st} sec")
         return json.loads(response.text)
 
     def get_clients_data(self, clients_per_page: int = 200) -> dict:
@@ -133,10 +146,10 @@ class YClientsAPI:
 
         # In the first request we obtain total number of clients in system
         first_request = self.__get_clients_page(1, clients_per_page)
-        clients_data_list = first_request['data']
+        clients_data_list = first_request["data"]
         # print(first_request)
         # total number of clients
-        clients_number = first_request['meta']['total_count']
+        clients_number = first_request["meta"]["total_count"]
 
         # number of pages that we need to request
         pages_number = int(clients_number / clients_per_page) + 1
@@ -150,7 +163,7 @@ class YClientsAPI:
 
         for page in range(2, pages_number + 1):
             new_page_request = self.__get_clients_page(page, clients_per_page)
-            clients_data_list.extend(new_page_request['data'])
+            clients_data_list.extend(new_page_request["data"])
         return clients_data_list
 
     def parse_clients_data(self, clients_data_list: list) -> pd.DataFrame:
@@ -169,7 +182,9 @@ class YClientsAPI:
 
     """VISITS DATA"""
 
-    def __get_visits_page(self, cid: int, page_number: int, visits_per_page: int) -> dict:
+    def __get_visits_page(
+        self, cid: int, page_number: int, visits_per_page: int
+    ) -> dict:
         """
         Yclients api can't return all visits at once and returns in groups
          of maximum size of 200. Those groups are called pages and you can
@@ -181,18 +196,18 @@ class YClientsAPI:
         """
         st = time.time()
         url = f"https://api.yclients.com/api/v1/records/{self.company_id}"
-        querystring = {
-            "client_id": cid,
-            "count": visits_per_page,
-            "page": page_number
-        }
+        querystring = {"client_id": cid, "count": visits_per_page, "page": page_number}
         response = requests.get(url, headers=self.headers, params=querystring)
         if self.__show_debugging:
-            print(f'Visits page {page_number} obtained in {time.time() - st} sec')
+            print(f"Visits page {page_number} obtained in {time.time() - st} sec")
 
         return json.loads(response.text)
 
-    def get_visits_for_client(self, cid: int, visits_per_page: int = 200,) -> list:
+    def get_visits_for_client(
+        self,
+        cid: int,
+        visits_per_page: int = 200,
+    ) -> list:
         """
         :param cid: client id
         :param visits_per_page: size of the page
@@ -230,12 +245,12 @@ class YClientsAPI:
         """
 
         # In the first request we obtain total number of client visits in system
-        first_request = self.__get_visits_page(cid=cid,
-                                               page_number=1,
-                                               visits_per_page=visits_per_page)
-        visits_data_list = first_request['data']
+        first_request = self.__get_visits_page(
+            cid=cid, page_number=1, visits_per_page=visits_per_page
+        )
+        visits_data_list = first_request["data"]
         # total number of visits
-        visits_number = first_request['meta']['total_count']
+        visits_number = first_request["meta"]["total_count"]
         # number of pages that we need to request
         pages_number = int(visits_number / visits_per_page) + 1
         if self.__show_debugging:
@@ -247,13 +262,15 @@ class YClientsAPI:
             return visits_data_list
 
         for page in range(2, pages_number + 1):
-            new_page_request = self.__get_visits_page(cid=cid,
-                                                      page_number=page,
-                                                      visits_per_page=visits_per_page)
-            visits_data_list.extend(new_page_request['data'])
+            new_page_request = self.__get_visits_page(
+                cid=cid, page_number=page, visits_per_page=visits_per_page
+            )
+            visits_data_list.extend(new_page_request["data"])
         return visits_data_list
 
-    def get_visits_data_for_clients_list(self, cids_list: list, visits_per_page=200) -> dict:
+    def get_visits_data_for_clients_list(
+        self, cids_list: list, visits_per_page=200
+    ) -> dict:
         """
         get_visits_for_client funtion wrapper for multiple clients
         :param cids_list: list of clients ids
@@ -261,12 +278,16 @@ class YClientsAPI:
         :return: dictionary with client id as key and list of visits as value
         """
 
-        clients_visits_dictionary = {cid: self.get_visits_for_client(cid, visits_per_page)
-                                     for cid in cids_list}
+        clients_visits_dictionary = {
+            cid: self.get_visits_for_client(cid, visits_per_page) for cid in cids_list
+        }
         return clients_visits_dictionary
 
-    def get_attended_visits_for_client(self, cid: int, visits_per_page: int = 200,
-                                      ) -> list:
+    def get_attended_visits_for_client(
+        self,
+        cid: int,
+        visits_per_page: int = 200,
+    ) -> list:
         """
         Attendance explanation from Yclient API:
             2 - The user has confirmed the entry,
@@ -279,14 +300,17 @@ class YClientsAPI:
             we want to use the same session for all of them
         :return: data of all the visits of client cid where attendance field is equal to 1
         """
-        all_visits = self.get_visits_for_client(cid=cid,
-                                                visits_per_page=visits_per_page,
-                                                )
-        attended_visits = [visit for visit in all_visits if visit['attendance'] == 1]
+        all_visits = self.get_visits_for_client(
+            cid=cid,
+            visits_per_page=visits_per_page,
+        )
+        attended_visits = [visit for visit in all_visits if visit["attendance"] == 1]
 
         return attended_visits
 
-    def get_attended_visits_dates_information(self, cids_lists: list, visits_per_page: int = 200) -> pd.DataFrame:
+    def get_attended_visits_dates_information(
+        self, cids_lists: list, visits_per_page: int = 200
+    ) -> pd.DataFrame:
         """
         :param cids_lists: clients ids list
         :param visits_per_page: size of the page
@@ -298,24 +322,25 @@ class YClientsAPI:
             - first_visit: date of client first attended visit
             - last_visit: date of client last attended visit
         """
-        columns = ['id', 'visits_number', 'first_visit', 'last_visit']
+        columns = ["id", "visits_number", "first_visit", "last_visit"]
         df = pd.DataFrame(columns=columns)
         for cid in cids_lists:
-            c_dict = {'id': cid}
-            attended_visits = self.get_attended_visits_for_client(cid=cid,
-                                                                  visits_per_page=visits_per_page,
-                                                                  )
-            visit_dates = [visit['datetime'] for visit in attended_visits]
+            c_dict = {"id": cid}
+            attended_visits = self.get_attended_visits_for_client(
+                cid=cid,
+                visits_per_page=visits_per_page,
+            )
+            visit_dates = [visit["datetime"] for visit in attended_visits]
 
             if not visit_dates:
-                c_dict['visits_number'] = 0
-                c_dict['first_visit'] = None
-                c_dict['last_visit'] = None
+                c_dict["visits_number"] = 0
+                c_dict["first_visit"] = None
+                c_dict["last_visit"] = None
             else:
                 visit_dates = list(map(self.datetime_parser, visit_dates))
-                c_dict['visits_number'] = len(visit_dates)
-                c_dict['first_visit'] = min(visit_dates).date()
-                c_dict['last_visit'] = max(visit_dates).date()
+                c_dict["visits_number"] = len(visit_dates)
+                c_dict["first_visit"] = min(visit_dates).date()
+                c_dict["last_visit"] = max(visit_dates).date()
 
             df = df.append(c_dict, ignore_index=True)
         return df
